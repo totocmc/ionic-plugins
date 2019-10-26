@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin
+    xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="toto-nfc"
+    version="1.0.0">
+
+    <name>NFC</name>
+
+    <description>Near Field Communication (NFC) Plugin. Read and write NDEF messages to NFC tags and share NDEF messages with peers.</description>
+
+    <license>MIT</license>
+    <keywords>nfc, NFC, NDEF</keywords>
+    <repo>https://github.com/chariotsolutions/phonegap-nfc.git</repo>
+    <issue>https://github.com/chariotsolutions/phonegap-nfc/issues</issue>
+
+    <js-module src="www/plugin.js" name="NFC">
+        <clobbers target="cordova.plugins.nfc" />
+    </js-module>
+
+    <platform name="android">
+        
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="NfcPlugin">
+                <param name="android-package" value="com.chariotsolutions.nfc.plugin.NfcPlugin"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/src/com/chariotsolutions/nfc/plugin/NfcPlugin.java"
+            target-dir="src/com/chariotsolutions/nfc/plugin"/>
+        <source-file src="src/android/src/com/chariotsolutions/nfc/plugin/Util.java"
+            target-dir="src/com/chariotsolutions/nfc/plugin"/>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.NFC"/>
+            <uses-feature android:name="android.hardware.nfc" android:required="false"/>
+        </config-file>
+
+    </platform>
+
+    <platform name="ios">
+        
+        <config-file parent="/*" target="config.xml">
+            <feature name="NfcPlugin">
+                <param name="ios-package" value="NfcPlugin" />
+            </feature>
+        </config-file>
+
+        <!-- https://developer.apple.com/documentation/bundleresources/entitlements/com_apple_developer_nfc_readersession_formats?language=objc -->
+        <config-file parent="com.apple.developer.nfc.readersession.formats" platform="ios" target="*-Debug.plist">
+            <array>
+                <string>NDEF</string>
+                <string>TAG</string>  
+            </array>
+        </config-file>
+        <config-file parent="com.apple.developer.nfc.readersession.formats" platform="ios" target="*-Release.plist">
+            <array>
+                <string>NDEF</string>
+                <string>TAG</string>  
+            </array>
+        </config-file>
+        
+        <header-file src="src/ios/NfcPlugin.h" />
+        <source-file src="src/ios/NfcPlugin.m" />
+
+        <source-file src="src/ios/NfcPlugin.swift" />
+        <source-file src="src/ios/NfcController.swift" />
+
+        <!-- frameworks -->
+        <framework src="CoreNFC.framework" />
+
+        <preference name="NFC_USAGE_DESCRIPTION" default="Read NFC Tags" />
+        <config-file target="*-Info.plist" parent="NFCReaderUsageDescription">
+            <string>$NFC_USAGE_DESCRIPTION</string>
+        </config-file>
+    </platform>
+
+
+</plugin>

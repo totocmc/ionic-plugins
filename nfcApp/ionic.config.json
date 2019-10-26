@@ -1,5 +1,7 @@
 {
   "name": "nfcApp",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }
