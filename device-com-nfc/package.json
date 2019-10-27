@@ -1,0 +1,72 @@
+{
+  "name": "@iotize/device-com-nfc.cordova",
+  "main": "./dist/index.js",
+  "version": "1.0.0-alpha.12",
+  "description": "Near Field Communication (NFC) Plugin. Read and write NDEF messages to NFC tags and share NDEF messages with peers.",
+  "cordova": {
+    "id": "iotize-device-com-nfc",
+    "platforms": [
+      "android",
+      "wp8",
+      "windows",
+      "blackberry10",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iotize-sas/device-com-nfc.cordova.git"
+  },
+  "keywords": [
+    "nfc",
+    "ndef",
+    "ecosystem:cordova",
+    "cordova",
+    "cordova-android",
+    "cordova-wp8",
+    "cordova-windows",
+    "cordova-blackberry10",
+    "cordova-ios"
+  ],
+  "author": "IoTize <dev@iotize.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iotize-sas/device-com-nfc.cordova/issues"
+  },
+  "homepage": "https://github.com/iotize-sas/device-com-nfc.cordova#readme",
+  "devDependencies": {
+    "@iotize/device-client.js": "0.0.1-alpha.96",
+    "@types/chai": "^4.1.7",
+    "@types/debug": "^4.1.4",
+    "@types/mocha": "^5.2.7",
+    "@types/node": "^12.6.8",
+    "chai": "^4.2.0",
+    "compression-webpack-plugin": "^2.0.0",
+    "mocha": "^6.2.0",
+    "mochawesome": "^4.0.1",
+    "rxjs": "^6.3.3",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.2.2",
+    "uglifyjs-webpack-plugin": "^2.1.2",
+    "webpack": "^4.29.6",
+    "webpack-bundle-analyzer": "^3.4.1",
+    "webpack-cli": "^3.3.0",
+    "webpack-rxjs-externals": "^2.0.0"
+  },
+  "peerDependencies": {
+    "@iotize/device-client.js": "^0.0.1-alpha.96",
+    "rxjs": "^6.0.0"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run build:ts && npm run build:webpack",
+    "prepare": "npm run build",
+    "build:ts": "tsc -p ./tsconfig.lib.json",
+    "build:webpack": "webpack --config webpack.config.js",
+    "clean": "rm -rf ./dist/*",
+    "test": "npm run test:unit",
+    "test:unit": "mocha --recursive src/www/**/*.spec.ts"
+  },
+  "dependencies": {
+    "debug": "^4.1.1"
+  }
+}

@@ -1,0 +1,14 @@
+{
+    "npm": {
+        "directory": "./dist",
+        "args": {},
+        "extra-files": [
+            "plugin.xml",
+            "LICENSE.txt",
+            "src",
+            "www",
+            "README.md",
+            "CHANGELOG.md"
+        ]
+    }
+}
