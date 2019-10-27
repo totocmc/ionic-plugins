@@ -85,7 +85,7 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
             }
             print( "connected to tag" )
             self!.fireTagEvent(tag: tag!)
-
+            self!.session?.invalidate()
         }
     }
     
@@ -94,7 +94,7 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
         
         if case let .iso15693(iso15Tag) = tag {
             let dict = NSMutableDictionary()
-            dict.setObject([iso15Tag.identifier], forKey: "id" as NSString)
+            dict.setValue([UInt8](iso15Tag.identifier), forKey: ("id" as NSString) as String)
             
             returnedJSON.setValue("tag", forKey: "type")
             returnedJSON.setObject(dict, forKey: "tag" as NSString)

@@ -39,7 +39,7 @@ export class HomePage {
       console.log('error attaching tag listener : ' +  + JSON.stringify(err));
     }).subscribe((event) => {
       console.log('received tag message. the tag is: ', event.tag);
-      //console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
+      console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
       this.data = event;
     });
 
