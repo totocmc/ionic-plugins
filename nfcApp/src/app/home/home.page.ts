@@ -23,6 +23,17 @@ export class HomePage {
     this.platform.ready().then(() => {
     console.log('ngoninit home');   
 
+    this.nfc.addTagDiscoveredListener((res) => {
+      console.log('successfully attached tag listener : '  + JSON.stringify(res));
+    }, (err) => {
+      console.log('error attaching tag listener : ' +  + JSON.stringify(err));
+    }).subscribe((event) => {
+      console.log('received tag message. the tag is: ', event.tag);
+      console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
+      this.data = event;
+
+    });
+
     this.nfc.addNdefListener((res) => {
       console.log('successfully attached ndef listener : '  + JSON.stringify(res));
     }, (err) => {
@@ -32,17 +43,7 @@ export class HomePage {
       //console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
       this.data = event;
     });
-
-    this.nfc.addTagDiscoveredListener((res) => {
-      console.log('successfully attached tag listener : '  + JSON.stringify(res));
-    }, (err) => {
-      console.log('error attaching tag listener : ' +  + JSON.stringify(err));
-    }).subscribe((event) => {
-      console.log('received tag message. the tag is: ', event.tag);
-      console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
-      this.data = event;
-    });
-
+    
     });
   }
 
@@ -50,7 +51,7 @@ export class HomePage {
   {
     console.log('scan' + event);   
 
-    this.nfc.beginNDEFSession(
+    this.nfc.read(
     () => {},
     () => {})
     .subscribe((event) =>
