@@ -877,6 +877,3 @@ require('cordova/channel').onCordovaReady.subscribe(function() {
     }
   }
 });
-
-export var nfc;
-export var ndef;

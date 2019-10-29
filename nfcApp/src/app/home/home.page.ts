@@ -3,7 +3,6 @@ import { Platform } from '@ionic/angular';
 
 import { NFC, Ndef, NdefEvent } from '@ionic-native/nfc/ngx';
 
-import { from } from 'rxjs';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
