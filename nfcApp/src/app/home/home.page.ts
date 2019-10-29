@@ -50,7 +50,7 @@ export class HomePage {
   {
     console.log('scan' + event);   
 
-    this.nfc.read(
+    this.nfc.beginNDEFSession(
     () => {},
     () => {})
     .subscribe((event) =>
