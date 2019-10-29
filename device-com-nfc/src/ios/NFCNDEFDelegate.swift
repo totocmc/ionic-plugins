@@ -25,11 +25,11 @@ class NFCNDEFDelegate: NSObject, NFCNDEFReaderSessionDelegate {
         self.session!.begin()
     }
     
-    func readerSession(_: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
+    func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
         for message in messages {
             self.fireNdefEvent(message: message)
         }
-        self.session?.invalidate()
+        session.invalidate()
     }
     
     func readerSession(_: NFCNDEFReaderSession, didInvalidateWithError _: Error) {
@@ -45,8 +45,6 @@ class NFCNDEFDelegate: NSObject, NFCNDEFReaderSessionDelegate {
         let response = message.ndefMessageToJSON()
         completed(response, nil)
     }
-    
-    
     
 }
 
