@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
-    xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-vtc-device-com-nfc" version="1.0.0">
+    xmlns:android="http://schemas.android.com/apk/res/android" id="vtc-device-com-nfc" version="1.0.0">
 
-    <name>cordova-plugin-vtc-device-com-nfc</name>
+    <name>@vtc/device-com-nfc</name>
 
     <description>Near Field Communication (NFC) Plugin. Read and write NDEF messages to NFC tags and share NDEF messages with peers.</description>
 
