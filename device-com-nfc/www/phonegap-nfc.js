@@ -459,9 +459,9 @@ var nfc = {
     //     cordova.exec(win, fail, "NfcPlugin", "stopHandover", []);
     // },
 
-    // erase: function (win, fail) {
-    //     cordova.exec(win, fail, "NfcPlugin", "eraseTag", [[]]);
-    // },
+    erase: function (win, fail) {
+        cordova.exec(win, fail, "NfcPlugin", "eraseTag", [[]]);
+    },
 
     enabled: function (win, fail) {
         cordova.exec(win, fail, "NfcPlugin", "enabled", [[]]);

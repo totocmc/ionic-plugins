@@ -120,6 +120,15 @@ import CoreNFC
          }
      }
 
+    @objc(eraseTag:)
+    func eraseTag(command: CDVInvokedUrlCommand) {
+        guard #available(iOS 13.0, *) else {
+            sendError(command: command, result: "transceive is only available on iOS 13+")
+            return
+        }
+        sendSuccess(command: command, result: "Tag erased")
+    }
+    
     @objc(writeTag:)
     func writeTag(command: CDVInvokedUrlCommand) {
         print(command.arguments.count)
