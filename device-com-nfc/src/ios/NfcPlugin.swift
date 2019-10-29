@@ -149,9 +149,14 @@ import CoreNFC
             return
         }
         
+        // we need data to send
+        if command.arguments.count <= 0 {
+            self.sendError(command: command, result: "SendRequest parameter error")
+            return
+        }
+        
         let args = command.arguments[0] as! NSMutableArray
         
-        //let ndefPayload: NFCNDEFPayload
         let ndefMessage = NFCNDEFMessage.init(records: [])
         ndefMessage.records.removeAll()
         
@@ -179,23 +184,19 @@ import CoreNFC
                 self.nfcController = NFCController()
             }
 
-            // we need data to send
-            if command.arguments.count <= 0 {
-                self.sendError(command: command, result: "SendRequest parameter error")
-                return
-            }
-
-            // guard let data: NSData = command.arguments[0] as? NSData else {
-            //     self.sendError(command: command, result: "Tried to transceive empty string")
-            //     return
-            // }
-            // print(data)
-            
-            // let request = data.map { String(format: "%02x", $0) }
-            //     .joined()
-            // print("send request  - \(request)")
-
-            self.nfcController?.initWriterSession(request: ndefMessage)
+            self.nfcController?.initWriterSession(completed: {
+                (response: String?, error: Error?) -> Void in
+                DispatchQueue.main.async {
+                    print("write TAG")
+                    if error != nil {
+                        self.lastError = error
+                        self.sendError(command: command, result: error!.localizedDescription)
+                    } else {
+                        self.sendSuccess(command: command, result: response ?? "")
+                    }
+                    self.tagController = nil
+                }
+            }, request: ndefMessage)
         }
     }
     

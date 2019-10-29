@@ -50,11 +50,11 @@ final class NFCController: NSObject {
         self.readerSession?.initSession()
     }
 
-    func initWriterSession(request: NFCNDEFMessage) {
+    func initWriterSession(completed: @escaping (String?, Error?) -> (), request: NFCNDEFMessage) {
         if self.writerSession == nil {
                 self.writerSession = NFCControllerWriter()
             }
-        self.writerSession?.initSession(request: request)
+        self.writerSession?.initSession(completed: completed, request: request)
     }
     
 }
@@ -178,6 +178,7 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
     var writerSession: NFCNDEFReaderSession?
     var ndefMessage: NFCNDEFMessage?
     var request: NFCNDEFMessage?
+    var completed: ((String?, Error?) -> ())?
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -187,7 +188,8 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
         fatalError("init(coder:) has not been implemented")
     }
     
-    func initSession(request: NFCNDEFMessage) {
+    func initSession(completed: @escaping (String?, Error?) -> (), request: NFCNDEFMessage) {
+        self.completed = completed
         self.request = request
         guard NFCNDEFReaderSession.readingAvailable else {
             let alertController = UIAlertController(
@@ -243,8 +245,10 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
                     tag.writeNDEF(self.request!, completionHandler: { (error: Error?) in
                         if nil != error {
                             session.alertMessage = "Write NDEF message fail: \(error!)"
+                            self.completed!(nil, error)
                         } else {
                             session.alertMessage = "Write NDEF message successful."
+                            self.completed!("Write OK", nil)
                         }
                         session.invalidate()
                     })
@@ -259,6 +263,7 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         // To read new tags, a new session instance is required.
         self.writerSession = nil
+        self.completed!(nil, error)
     }
 
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
