@@ -32,8 +32,9 @@ class NFCNDEFDelegate: NSObject, NFCNDEFReaderSessionDelegate {
         session.invalidate()
     }
     
-    func readerSession(_: NFCNDEFReaderSession, didInvalidateWithError _: Error) {
-        completed(nil, "NFCNDEFReaderSession error" as? Error)
+    func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
+        print(error.localizedDescription)
+        completed(nil, error)
     }
     
     func readerSessionDidBecomeActive(_: NFCNDEFReaderSession) {

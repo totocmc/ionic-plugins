@@ -14,12 +14,10 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     var session: NFCTagReaderSession?
     var completed: ([AnyHashable : Any]?, Error?) -> ()
     
-    var globalQueue = DispatchQueue.global(qos: .background)
-    
     init(completed: @escaping ([AnyHashable: Any]?, Error?) -> (), message: String?) {
         self.completed = completed
         super.init()
-        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: globalQueue)
+        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: nil)
         if (self.session == nil) {
             self.completed(nil, "NFC is not available" as? Error);
             return
@@ -33,25 +31,6 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
         session?.invalidate()
     }
     
-    func tagRemovalDetect(_ tag: NFCTag) {
-    // In the tag removal procedure, you connect to the tag and query for
-    // its availability. You restart RF polling when the tag becomes
-    // unavailable; otherwise, wait for certain period of time and repeat
-    // availability checking.
-        session?.connect(to: tag) { (error: Error?) in
-            if error != nil || !tag.isAvailable {
-                
-                print("Restart polling")
-                
-                self.session?.restartPolling()
-                return
-            }
-            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .milliseconds(500), execute: {
-                self.tagRemovalDetect(tag)
-            })
-        }
-    }
-    
     func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
        // If necessary, you may perform additional operations on session start.
        // At this point RF polling is enabled.
@@ -59,7 +38,9 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error){
-      completed(nil, "NFCNDEFReaderSession error" as? Error)
+        print(error.localizedDescription)
+        completed(nil, error)
+        
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
@@ -101,7 +82,8 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
 
             if error != nil {
                 let error = NFCReaderError(NFCReaderError.readerTransceiveErrorTagNotConnected)
-                self!.invalidateSession( message: error.localizedDescription  )
+                session.alertMessage = error.localizedDescription
+                session.invalidate()
                 self!.completed(nil, "tagReaderSession:connect to tag" as? Error)
                 return
             }

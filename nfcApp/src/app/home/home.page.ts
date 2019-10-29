@@ -32,16 +32,18 @@ export class HomePage {
       console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
       this.data = event;
 
-    });
+      setTimeout(() => {
+        this.nfc.addNdefListener((res) => {
+          console.log('successfully attached ndef listener : '  + JSON.stringify(res));
+        }, (err) => {
+          console.log('error attaching ndef listener : ' +  + JSON.stringify(err));
+        }).subscribe((event) => {
+          console.log('received ndef message. the tag contains: ', event.tag);
+          //console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
+          this.data = event;
+        });
+      }, 0);
 
-    this.nfc.addNdefListener((res) => {
-      console.log('successfully attached ndef listener : '  + JSON.stringify(res));
-    }, (err) => {
-      console.log('error attaching ndef listener : ' +  + JSON.stringify(err));
-    }).subscribe((event) => {
-      console.log('received ndef message. the tag contains: ', event.tag);
-      //console.log('decoded tag id', this.nfc.bytesToHexString(event.tag.id));
-      this.data = event;
     });
     
     });
