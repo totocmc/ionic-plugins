@@ -8,15 +8,18 @@
 import Foundation
 import CoreNFC
 
-class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
-    
+class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
+{
+       
     var session: NFCTagReaderSession?
     var completed: ([AnyHashable : Any]?, Error?) -> ()
+    
+    var globalQueue = DispatchQueue.global(qos: .background)
     
     init(completed: @escaping ([AnyHashable: Any]?, Error?) -> (), message: String?) {
         self.completed = completed
         super.init()
-        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: nil)
+        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: globalQueue)
         if (self.session == nil) {
             self.completed(nil, "NFC is not available" as? Error);
             return
@@ -28,6 +31,25 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
     func invalidateSession( message :String) {
         session?.alertMessage = message
         session?.invalidate()
+    }
+    
+    func tagRemovalDetect(_ tag: NFCTag) {
+    // In the tag removal procedure, you connect to the tag and query for
+    // its availability. You restart RF polling when the tag becomes
+    // unavailable; otherwise, wait for certain period of time and repeat
+    // availability checking.
+        session?.connect(to: tag) { (error: Error?) in
+            if error != nil || !tag.isAvailable {
+                
+                print("Restart polling")
+                
+                self.session?.restartPolling()
+                return
+            }
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .milliseconds(500), execute: {
+                self.tagRemovalDetect(tag)
+            })
+        }
     }
     
     func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
@@ -85,7 +107,8 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
             }
             print( "connected to tag" )
             self!.fireTagEvent(tag: tag!)
-            self!.session?.invalidate()
+            session.invalidate()
+            
         }
     }
     
@@ -94,7 +117,7 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate {
         
         if case let .iso15693(iso15Tag) = tag {
             let dict = NSMutableDictionary()
-            dict.setValue([UInt8](iso15Tag.identifier), forKey: ("id" as NSString) as String)
+            dict.setValue([UInt8](iso15Tag.identifier.reversed()), forKey: ("id" as NSString) as String)
             
             returnedJSON.setValue("tag", forKey: "type")
             returnedJSON.setObject(dict, forKey: "tag" as NSString)

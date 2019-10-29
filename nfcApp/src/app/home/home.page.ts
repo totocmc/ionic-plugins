@@ -50,17 +50,12 @@ export class HomePage {
   {
     console.log('scan' + event);   
 
-    this.nfc.beginNDEFSession(
-    (res) =>
+    this.nfc.read(
+    () => {},
+    () => {})
+    .subscribe((event) =>
     {
-      console.log('successfully start session' + JSON.stringify(res));
-    },
-    (err) =>
-    {
-      console.log('error start session' + JSON.stringify(err));
-    }).subscribe((event) =>
-    {
-      console.log('session subscibe: ', event);
+      console.log('read subscibe: ', event);
 
     });
   }

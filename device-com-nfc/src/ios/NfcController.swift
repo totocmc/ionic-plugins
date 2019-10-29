@@ -43,9 +43,9 @@ final class NFCController: NSObject {
     var readerSession: NFCControllerReader?
     var writerSession: NFCControllerWriter?
     
-    func initReaderSession() {
+    func initReaderSession(completed: @escaping ([AnyHashable: Any]?, Error?) -> ()) {
         if self.readerSession == nil {
-                self.readerSession = NFCControllerReader()
+                self.readerSession = NFCControllerReader(completed: completed)
             }
         self.readerSession?.initSession()
     }
@@ -57,21 +57,20 @@ final class NFCController: NSObject {
         self.writerSession?.initSession(request: request)
     }
     
-    func invalidateSession( message :String) {
-        self.readerSession?.invalidateSession(message: message)
-    }
 }
 
 // MARK: - NFCController Reader
 
 @available(iOS 13.0, *)
-final class NFCControllerReader: UITableViewController, UINavigationControllerDelegate, NFCNDEFReaderSessionDelegate {
+final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDelegate {
     
     // MARK: - Properties
     var readerSession: NFCNDEFReaderSession?
-    var ndefMessage: NFCNDEFMessage?
-
-    init() {
+    var detectedMessages = [NFCNDEFMessage]()
+    var completed: ([AnyHashable : Any]?, Error?) -> ()
+    
+    init(completed: @escaping ([AnyHashable: Any]?, Error?) -> ()) {
+        self.completed = completed
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -90,121 +89,84 @@ final class NFCControllerReader: UITableViewController, UINavigationControllerDe
             self.present(alertController, animated: true, completion: nil)
             return
         }
-        
+
         readerSession = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: false)
-        readerSession?.alertMessage = "Hold your iPhone near a writable NFC tag to update."
+        readerSession?.alertMessage = "Hold your iPhone near the item to learn more about it."
         readerSession?.begin()
     }
+    
+    func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
+        
+    }
 
-    func invalidateSession( message :String) {
-        readerSession?.alertMessage = message
-        readerSession?.invalidate()
-    }
-    
-    func tagRemovalDetect(_ tag: NFCNDEFTag) {
-        // In the tag removal procedure, you connect to the tag and query for
-        // its availability. You restart RF polling when the tag becomes
-        // unavailable; otherwise, wait for certain period of time and repeat
-        // availability checking.
-        readerSession?.connect(to: tag) { (error: Error?) in
-            if error != nil || !tag.isAvailable {
-                
-                print("Restart polling")
-                
-                self.readerSession?.restartPolling()
-                return
-            }
-            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .milliseconds(500), execute: {
-                self.tagRemovalDetect(tag)
-            })
-        }
-    }
-    
-    func updateWithNDEFMessage(_ message: NFCNDEFMessage) -> Bool {
-        // UI elements are updated based on the received NDEF message.
-        let urls: [URLComponents] = message.records.compactMap { (payload: NFCNDEFPayload) -> URLComponents? in
-            // Search for URL record with matching domain host and scheme.
-            if let url = payload.wellKnownTypeURIPayload() {
-                let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-                if components?.host == "fishtagcreator.example.com" && components?.scheme == "https" {
-                    return components
-                }
-            }
-            return nil
-        }
-        
-        // Valid tag should only contain 1 URL and contain multiple query items.
-        guard urls.count == 1,
-            let items = urls.first?.queryItems else {
-            return false
-        }
-        
-        // Get the optional info text from the text payload.
-        var additionInfo: String? = nil
-
-        for payload in message.records {
-            (additionInfo, _) = payload.wellKnownTypeTextPayload()
-            
-            if additionInfo != nil {
-                break
-            }
-        }
-        
-        
-        
-        return true
-    }
-    
-    // 2.
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
         if tags.count > 1 {
-            session.alertMessage = "More than 1 tags was found. Please present only 1 tag."
-            self.tagRemovalDetect(tags.first!)
+            // Restart polling in 500ms
+            let retryInterval = DispatchTimeInterval.milliseconds(500)
+            session.alertMessage = "More than 1 tag is detected, please remove all tags and try again."
+            DispatchQueue.global().asyncAfter(deadline: .now() + retryInterval, execute: {
+                session.restartPolling()
+            })
             return
         }
         
-        let ndefTag = tags.first!
-        
-        session.connect(to: tags.first!) { (error: Error?) in
-            if error != nil {
-                session.invalidate(errorMessage: "Connection error. Please try again.")
+        // Connect to the found tag and perform NDEF message reading
+        let tag = tags.first!
+        print(tag)
+        if tag.conforms(to: NFCISO15693Tag.self)
+        {
+            //let tg: NFCISO15693Tag = NFCISO15693Tag(coder: tag)
+        }
+        session.connect(to: tag, completionHandler: { (error: Error?) in
+            if nil != error {
+                session.alertMessage = "Unable to connect to tag."
+                session.invalidate()
                 return
             }
             
-            ndefTag.queryNDEFStatus() { (status: NFCNDEFStatus, _, error: Error?) in
-                if status == .notSupported {
-                    session.invalidate(errorMessage: "Tag not valid.")
+            tag.queryNDEFStatus(completionHandler: { (ndefStatus: NFCNDEFStatus, capacity: Int, error: Error?) in
+                if .notSupported == ndefStatus {
+                    session.alertMessage = "Tag is not NDEF compliant"
+                    session.invalidate()
+                    return
+                } else if nil != error {
+                    session.alertMessage = "Unable to query NDEF status of tag"
+                    session.invalidate()
                     return
                 }
-                ndefTag.readNDEF() { (message: NFCNDEFMessage?, error: Error?) in
-                    if error != nil || message == nil {
-                        session.invalidate(errorMessage: "Read error. Please try again.")
-                        return
+                
+                tag.readNDEF(completionHandler: { (message: NFCNDEFMessage?, error: Error?) in
+                    var statusMessage: String
+                    if nil != error || nil == message {
+                        statusMessage = "Fail to read NDEF from tag"
+                    } else {
+                        statusMessage = "Found 1 NDEF message"
+                        DispatchQueue.main.async {
+                            self.fireNdefEvent(message: message!)
+                        }
                     }
                     
-                    if self.updateWithNDEFMessage(message!) {
-                        session.alertMessage = "Tag read success."
-                        session.invalidate()
-                        return
-                    }
-                    
-                    session.invalidate(errorMessage: "Tag not valid.")
-                }
-            }
-        }
-    }
-
-    func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
-        //
-    }
-
-    func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {
-        //
+                    session.alertMessage = statusMessage
+                    session.invalidate()
+                })
+            })
+        })
     }
     
     func readerSessionDidBecomeActive(_ session: NFCNDEFReaderSession) {
-        //
+        
     }
+    
+    func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
+        // To read new tags, a new session instance is required.
+        self.readerSession = nil
+    }
+    
+    func fireNdefEvent(message: NFCNDEFMessage) {
+        let response = message.ndefMessageToJSON()
+        completed(response, nil)
+    }
+
 }
 
 // MARK: - NFCController Writer
@@ -243,70 +205,60 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
         writerSession?.begin()
     }
 
-    func invalidateSession( message :String) {
-        writerSession?.alertMessage = message
-        writerSession?.invalidate()
-    }
-    
-    func tagRemovalDetect(_ tag: NFCNDEFTag) {
-        // In the tag removal procedure, you connect to the tag and query for
-        // its availability. You restart RF polling when the tag becomes
-        // unavailable; otherwise, wait for certain period of time and repeat
-        // availability checking.
-        writerSession?.connect(to: tag) { (error: Error?) in
-            if error != nil || !tag.isAvailable {
-                
-                print("Restart polling")
-                
-                self.writerSession?.restartPolling()
-                return
-            }
-            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + .milliseconds(500), execute: {
-                self.tagRemovalDetect(tag)
-            })
-        }
-    }
-    
-    // 2.
     func readerSession(_ session: NFCNDEFReaderSession, didDetect tags: [NFCNDEFTag]) {
-        
-        let tag = tags.first!
-        // 3
-        session.connect(to: tag) { (error: Error?) in
-            if error != nil {
+        if tags.count > 1 {
+            // Restart polling in 500 milliseconds.
+            let retryInterval = DispatchTimeInterval.milliseconds(500)
+            session.alertMessage = "More than 1 tag is detected. Please remove all tags and try again."
+            DispatchQueue.global().asyncAfter(deadline: .now() + retryInterval, execute: {
                 session.restartPolling()
-            }
+            })
+            return
         }
-
-        // 4
-        tag.queryNDEFStatus() { (status: NFCNDEFStatus, capacity: Int, error: Error?) in
-            
-            if error != nil {
-                session.invalidate(errorMessage: "Fail to determine NDEF status.  Please try again.")
+        
+        // Connect to the found tag and write an NDEF message to it.
+        let tag = tags.first!
+        session.connect(to: tag, completionHandler: { (error: Error?) in
+            if nil != error {
+                session.alertMessage = "Unable to connect to tag."
+                session.invalidate()
                 return
             }
-        
-            if status == .readOnly {
-                session.invalidate(errorMessage: "Tag is not writable.")
-            } else if status == .readWrite {
-                // 5
-                tag.writeNDEF(self.request!) { (error: Error?) in
-                    if error != nil {
-                        session.invalidate(errorMessage: "Update tag failed. Please try again.")
-                    } else {
-                        session.alertMessage = "Update success!"
-                        // 6
-                        session.invalidate()
-                    }
+            
+            tag.queryNDEFStatus(completionHandler: { (ndefStatus: NFCNDEFStatus, capacity: Int, error: Error?) in
+                guard error == nil else {
+                    session.alertMessage = "Unable to query the NDEF status of tag."
+                    session.invalidate()
+                    return
                 }
-            } else {
-                session.invalidate(errorMessage: "Tag is not NDEF formatted.")
-            }
-        }
-    }
 
+                switch ndefStatus {
+                case .notSupported:
+                    session.alertMessage = "Tag is not NDEF compliant."
+                    session.invalidate()
+                case .readOnly:
+                    session.alertMessage = "Tag is read only."
+                    session.invalidate()
+                case .readWrite:
+                    tag.writeNDEF(self.request!, completionHandler: { (error: Error?) in
+                        if nil != error {
+                            session.alertMessage = "Write NDEF message fail: \(error!)"
+                        } else {
+                            session.alertMessage = "Write NDEF message successful."
+                        }
+                        session.invalidate()
+                    })
+                @unknown default:
+                    session.alertMessage = "Unknown NDEF tag status."
+                    session.invalidate()
+                }
+            })
+        })
+    }
+    
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
-        //
+        // To read new tags, a new session instance is required.
+        self.writerSession = nil
     }
 
     func readerSession(_ session: NFCNDEFReaderSession, didDetectNDEFs messages: [NFCNDEFMessage]) {

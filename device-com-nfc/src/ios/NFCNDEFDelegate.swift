@@ -40,6 +40,7 @@ class NFCNDEFDelegate: NSObject, NFCNDEFReaderSessionDelegate {
         print("NDEF Reader session active")
     }
     
+    
     func fireNdefEvent(message: NFCNDEFMessage) {
         let response = message.ndefMessageToJSON()
         completed(response, nil)

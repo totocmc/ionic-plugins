@@ -37,6 +37,16 @@ import CoreNFC
         )
         commandDelegate!.send(pluginResult, callbackId: command.callbackId)
     }
+    
+    // helper to return a JSON
+    private func sendSuccess(command: CDVInvokedUrlCommand, jsonDictionary: [AnyHashable: Any]) {
+            let pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: jsonDictionary)
+             
+            commandDelegate!.send(pluginResult, callbackId: command.callbackId)
+
+        }
 
     // helper to return a String with keeping the callback
     func sendSuccessWithResponse(command: CDVInvokedUrlCommand, result: String) {
@@ -69,7 +79,7 @@ import CoreNFC
                 self.nfcController = NFCController()
             }
 
-            (self.nfcController as! NFCController).initReaderSession()
+            //(self.nfcController as! NFCController).initReaderSession()
         }
     }
 
@@ -85,7 +95,7 @@ import CoreNFC
                 return
             }
 
-            (self.nfcController as! NFCController).invalidateSession(message: "Sesssion Ended!")
+            //(self.nfcController as! NFCController).invalidateSession(message: "Sesssion Ended!")
             self.nfcController = nil
         }
     }
@@ -142,7 +152,7 @@ import CoreNFC
         let args = command.arguments[0] as! NSMutableArray
         
         //let ndefPayload: NFCNDEFPayload
-        var ndefMessage = NFCNDEFMessage.init(records: [])
+        let ndefMessage = NFCNDEFMessage.init(records: [])
         ndefMessage.records.removeAll()
         
         for arg in args
@@ -234,6 +244,31 @@ import CoreNFC
         sendSuccess(command: command, result: "NDEF Listener is on")
     }
 
+    @objc(readTag:)
+        func readTag(command: CDVInvokedUrlCommand) {
+            DispatchQueue.main.async {
+                 print("Begin NDEF reading session")
+
+                 if self.nfcController == nil {
+                    self.nfcController = NFCController()
+                    self.nfcController!.initReaderSession(completed: {
+                         (response: [AnyHashable: Any]?, error: Error?) -> Void in
+                         DispatchQueue.main.async {
+                             print("handle NDEF")
+                             if error != nil {
+                                 self.lastError = error
+                                 self.sendError(command: command, result: error!.localizedDescription)
+                             } else {
+                                 self.sendSuccess(command: command, jsonDictionary: response ?? [:])
+                                 //self.sendThroughChannel(jsonDictionary: response ?? [:])
+                             }
+                             self.nfcController = nil
+                         }
+                     })
+                }
+            }
+        }
+    
     @objc(beginNDEFSession:)
     func beginNDEFSession(command: CDVInvokedUrlCommand) {
          DispatchQueue.main.async {

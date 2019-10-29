@@ -1,0 +1,53 @@
+{
+  "_from": "@ionic-native/nfc",
+  "_id": "@ionic-native/nfc@5.15.1",
+  "_inBundle": false,
+  "_integrity": "sha512-fN8MUnSw9W0WCZI6Rz1VF0QARrBxBfOcJN8JShiIlZi/eqN8glaqbR+pd5VlPnPnk56nubU10gcgfyjOpUL7lA==",
+  "_location": "/@ionic-native/nfc",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@ionic-native/nfc",
+    "name": "@ionic-native/nfc",
+    "escapedName": "@ionic-native%2fnfc",
+    "scope": "@ionic-native",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@ionic-native/nfc/-/nfc-5.15.1.tgz",
+  "_shasum": "9878b101f94bb7d3d69b8c6063e64273bc606078",
+  "_spec": "@ionic-native/nfc",
+  "_where": "/Users/villeboeuf/Projects/GIT/PERSO/ionic-plugins/nfcApp",
+  "author": {
+    "name": "ionic"
+  },
+  "bugs": {
+    "url": "https://github.com/ionic-team/ionic-native/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@types/cordova": "latest"
+  },
+  "deprecated": false,
+  "description": "Ionic Native - Native plugins for ionic apps",
+  "homepage": "https://github.com/ionic-team/ionic-native#readme",
+  "license": "MIT",
+  "module": "index.js",
+  "name": "@ionic-native/nfc",
+  "peerDependencies": {
+    "rxjs": "^5.5.0 || ^6.5.0",
+    "@ionic-native/core": "^5.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ionic-team/ionic-native.git"
+  },
+  "typings": "index.d.ts",
+  "version": "5.15.1"
+}
