@@ -19,7 +19,7 @@ import CoreNFC
     var channelCommand: CDVInvokedUrlCommand?
     var isListeningNDEF = false
     var isListeningTAG = false
-
+    
     // helper to return a string
     func sendSuccess(command: CDVInvokedUrlCommand, result: String) {
         let pluginResult = CDVPluginResult(
@@ -116,18 +116,44 @@ import CoreNFC
             //      .joined()
             //  print("send request  - \(request)")
 
-            self.nfcController?.initWriterSession(request: "")
+            //self.nfcController?.initWriterSession(request: )
          }
      }
 
     @objc(writeTag:)
     func writeTag(command: CDVInvokedUrlCommand) {
-        print(command)
-        
+        print(command.arguments.count)
+        print(command.arguments[0])
+
         guard #available(iOS 13.0, *) else {
             sendError(command: command, result: "transceive is only available on iOS 13+")
             return
         }
+        
+        let args = command.arguments[0] as! NSMutableArray
+        
+        //let ndefPayload: NFCNDEFPayload
+        var ndefMessage = NFCNDEFMessage.init(records: [])
+        ndefMessage.records.removeAll()
+        
+        for arg in args
+        {
+            let dictionary = arg as! [String: AnyObject]
+            print(dictionary)
+            var type: Data = Data.init()
+            type.append(contentsOf: dictionary["type"] as! [UInt8])
+            let typeNameFormat = NFCTypeNameFormat(rawValue: dictionary["tnf"] as! UInt8)!
+            var payload: Data = Data.init()
+            payload.append(contentsOf: dictionary["payload"] as! [UInt8])
+            var identifier: Data = Data.init()
+            identifier.append(contentsOf: dictionary["id"] as! [UInt8])
+            
+            let ndefPayload = NFCNDEFPayload.init(format: typeNameFormat , type: type , identifier: identifier , payload: payload )
+            
+            ndefMessage.records.append(ndefPayload)
+        }
+        print(ndefMessage)
+        
         DispatchQueue.main.async {
             print("sending ...")
             if self.nfcController == nil {
@@ -150,7 +176,7 @@ import CoreNFC
             //     .joined()
             // print("send request  - \(request)")
 
-           self.nfcController?.initWriterSession(request: "")
+            self.nfcController?.initWriterSession(request: ndefMessage)
         }
     }
     

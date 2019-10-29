@@ -50,7 +50,7 @@ final class NFCController: NSObject {
         self.readerSession?.initSession()
     }
 
-    func initWriterSession(request: String) {
+    func initWriterSession(request: NFCNDEFMessage) {
         if self.writerSession == nil {
                 self.writerSession = NFCControllerWriter()
             }
@@ -163,7 +163,7 @@ final class NFCControllerReader: UITableViewController, UINavigationControllerDe
             return
         }
         
-        var ndefTag = tags.first!
+        let ndefTag = tags.first!
         
         session.connect(to: tags.first!) { (error: Error?) in
             if error != nil {
@@ -215,7 +215,8 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
     // MARK: - Properties
     var writerSession: NFCNDEFReaderSession?
     var ndefMessage: NFCNDEFMessage?
-
+    var request: NFCNDEFMessage?
+    
     init() {
         super.init(nibName: nil, bundle: nil)
     }
@@ -224,7 +225,8 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
         fatalError("init(coder:) has not been implemented")
     }
     
-    func initSession(request: String) {
+    func initSession(request: NFCNDEFMessage) {
+        self.request = request
         guard NFCNDEFReaderSession.readingAvailable else {
             let alertController = UIAlertController(
                 title: "Scanning Not Supported",
@@ -283,15 +285,12 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
                 session.invalidate(errorMessage: "Fail to determine NDEF status.  Please try again.")
                 return
             }
-            
-            let textPayload = NFCNDEFPayload.wellKnownTypeTextPayload(string: "Hello from swifting.io", locale: Locale(identifier: "En"))
-            let myMessage = NFCNDEFMessage(records: [textPayload!, textPayload!])
         
             if status == .readOnly {
                 session.invalidate(errorMessage: "Tag is not writable.")
             } else if status == .readWrite {
                 // 5
-                tag.writeNDEF(myMessage) { (error: Error?) in
+                tag.writeNDEF(self.request!) { (error: Error?) in
                     if error != nil {
                         session.invalidate(errorMessage: "Update tag failed. Please try again.")
                     } else {
