@@ -77,7 +77,7 @@ export declare class NFC extends IonicNativePlugin {
     
     transceive(data: String | ArrayBuffer, onSuccess?: Function, onFailure?: Function): Promise<any>;
     
-    read(onSuccess?: Function, onFailure?: Function): Observable<any>;
+    read(): Promise<any>;
     //END THV add
 
     /**

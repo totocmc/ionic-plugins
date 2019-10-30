@@ -44,7 +44,7 @@ var NFC = /** @class */ (function (_super) {
 
     NFC.prototype.transceive = function (data, onSuccess, onFailure) { return cordova(this, "transceive", { "otherPromise": true, "successIndex": 1, "errorIndex": 4, "clearFunction": "close", "clearWithArgs": true }, arguments); };
     
-    NFC.prototype.read = function (onSuccess, onFailure) { return cordova(this, "readTag", { "observable": true, "successIndex": 0, "errorIndex": 3, "clearFunction": "invalidateSession", "clearWithArgs": true }, arguments); };
+    NFC.prototype.read = function () { return cordova(this, "read", {}, arguments); };
     //END THV add
     
     NFC.prototype.beginSession = function (onSuccess, onFailure) { return cordova(this, "beginSession", { "observable": true, "successIndex": 0, "errorIndex": 3, "clearFunction": "invalidateSession", "clearWithArgs": true }, arguments); };
