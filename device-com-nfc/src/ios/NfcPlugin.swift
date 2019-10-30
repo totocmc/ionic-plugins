@@ -136,7 +136,11 @@ import CoreNFC
             sendError(command: command, result: "transceive is only available on iOS 13+")
             return
         }
-        sendSuccess(command: command, result: "Tag erased")
+        DispatchQueue.global().async {
+            let waitingTimeInterval: Double = 2.0;
+            Thread.sleep(forTimeInterval: waitingTimeInterval)
+            self.sendSuccess(command: command, result: "Tag erased")
+        }
     }
     
     @objc(writeTag:)

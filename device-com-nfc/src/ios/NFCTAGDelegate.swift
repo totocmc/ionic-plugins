@@ -39,7 +39,9 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error){
         print(error.localizedDescription)
-        completed(nil, error)
+        session.invalidate()
+        self.session = nil
+        self.completed(nil, error)
         
     }
 
