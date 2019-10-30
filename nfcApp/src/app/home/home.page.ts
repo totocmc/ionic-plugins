@@ -53,13 +53,14 @@ export class HomePage {
   {
     console.log('scan' + event);   
 
-    this.nfc.read(
-    () => {},
-    () => {})
-    .subscribe((event) =>
+    this.nfc.read().then(
+    (res) => 
     {
-      console.log('read subscibe: ', event);
-
+      console.log('tag read : ', res);
+    },
+    (err) => 
+    {
+      console.log('tag read fail : ', err);
     });
   }
 
@@ -84,12 +85,12 @@ export class HomePage {
         .then(
         (event) =>
         {
-          console.log('write promise ok : ' + event);
+          console.log('write promise ok : ', event);
     
         },
         (error) =>
         {
-          console.log('write promise fail : ' + error);
+          console.log('write promise fail : ', error);
         });
     
   }

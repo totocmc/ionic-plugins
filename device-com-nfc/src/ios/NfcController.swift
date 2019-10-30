@@ -141,9 +141,9 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
                         self.completed(nil, error)
                     } else {
                         statusMessage = "Found 1 NDEF message"
-                        DispatchQueue.main.async {
+                        
                             self.fireNdefEvent(message: message!)
-                        }
+                        
                     }
                     
                     session.alertMessage = statusMessage
@@ -159,7 +159,9 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
     
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         // To read new tags, a new session instance is required.
-        self.readerSession = nil
+        session.invalidate()
+        readerSession = nil
+        self.completed(nil, error)
     }
     
     func fireNdefEvent(message: NFCNDEFMessage) {
@@ -265,6 +267,7 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         // To read new tags, a new session instance is required.
         session.invalidate()
+        writerSession = nil
         self.completed(nil, error)
     }
 
