@@ -136,11 +136,16 @@ import CoreNFC
             sendError(command: command, result: "transceive is only available on iOS 13+")
             return
         }
-        DispatchQueue.global().async {
-            let waitingTimeInterval: Double = 2.0;
-            Thread.sleep(forTimeInterval: waitingTimeInterval)
-            self.sendSuccess(command: command, result: "Tag erased")
+//        print("1 \(DispatchTime.now())")
+//        let retryInterval = DispatchTimeInterval.seconds(3)
+//        DispatchQueue.main.asyncAfter(deadline: .now() + retryInterval, execute: {
+//            print("2 \(DispatchTime.now())")
+            print("1 \(DispatchTime.now()) erase ok")
+            let timer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { (timer) in
+                print("2 \(DispatchTime.now()) erase ok")
+                self.sendSuccess(command: command, result: "Tag erased")
         }
+        
     }
     
     @objc(writeTag:)
@@ -185,6 +190,12 @@ import CoreNFC
         
         DispatchQueue.main.async {
             print("sending ...")
+            
+//            let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
+//                print("1 \(DispatchTime.now()) try wrinting")
+//                timer.invalidate()
+//            }
+            
             if self.nfcController == nil {
                 self.nfcController = NFCController()
                 self.nfcController?.initWriterSession(completed: {
@@ -239,7 +250,7 @@ import CoreNFC
     func registerTag(command: CDVInvokedUrlCommand) {
         print("Registered TAG Listener")
         isListeningTAG = true // Flag for the AppDelegate
-        sendSuccess(command: command, result: "TAG Listener is on")
+        //sendSuccess(command: command, result: "TAG Listener is on")
         
         DispatchQueue.main.async {
             print("Begin TAG reading session")

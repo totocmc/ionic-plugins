@@ -17,12 +17,13 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     init(completed: @escaping ([AnyHashable: Any]?, Error?) -> (), message: String?) {
         self.completed = completed
         super.init()
-        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: nil)
-        if (self.session == nil) {
+        guard #available(iOS 13.0, *) else {
             self.completed(nil, "NFC is not available" as? Error);
             return
         }
-        self.session!.alertMessage = message ?? ""
+        
+        self.session = NFCTagReaderSession.init(pollingOption: [.iso15693], delegate: self, queue: nil)
+        self.session!.alertMessage = message ?? "Scanning TAG UID"
         self.session!.begin()
     }
     
@@ -32,9 +33,9 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     }
     
     func tagReaderSessionDidBecomeActive(_ session: NFCTagReaderSession) {
-       // If necessary, you may perform additional operations on session start.
-       // At this point RF polling is enabled.
-       print( "tagReaderSessionDidBecomeActive" )
+        // If necessary, you may perform additional operations on session start.
+        // At this point RF polling is enabled.
+        print( "tagReaderSessionDidBecomeActive" )
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error){
@@ -89,9 +90,12 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
                 self!.completed(nil, "tagReaderSession:connect to tag" as? Error)
                 return
             }
-            print( "connected to tag" )
-            self!.fireTagEvent(tag: tag!)
-            session.invalidate()
+            else
+            {
+                print( "connected to tag" )
+                self!.fireTagEvent(tag: tag!)
+                session.invalidate()
+            }
             
         }
     }

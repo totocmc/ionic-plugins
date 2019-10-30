@@ -51,12 +51,37 @@ final class NFCController: NSObject {
 
     func initWriterSession(completed: @escaping ([AnyHashable: Any]?, Error?) -> (), request: NFCNDEFMessage) {
         if self.writerSession == nil {
-                self.writerSession = NFCControllerWriter(completed: completed, request: request)
+            let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
+                print("1 \(DispatchTime.now()) try writing")
+                
+                self.writerSession = NFCControllerWriter(completed: {
+                (response: [AnyHashable: Any]?, error: Error?) -> Void in
+                    if(error != nil)
+                    {
+                        if let readerError = error as? NFCReaderError
+                        {
+                            if (readerError.code == .readerSessionInvalidationErrorSystemIsBusy)
+                            {
+                                print("system busy")
+                            }
+                            else
+                            {
+                                print(error)
+                                timer.invalidate()
+                                completed(nil, error)
+                            }
+                        }
+                    }
+                    else
+                    {
+                        timer.invalidate()
+                        completed(response, nil)
+                    }
+                }, request: request)
             }
+        }
     }
-    
 }
-
 // MARK: - NFCController Reader
 
 @available(iOS 13.0, *)
@@ -125,12 +150,10 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
                 if .notSupported == ndefStatus {
                     session.alertMessage = "Tag is not NDEF compliant"
                     session.invalidate()
-                    self.completed(nil, error)
                     return
                 } else if nil != error {
                     session.alertMessage = "Unable to query NDEF status of tag"
                     session.invalidate()
-                    self.completed(nil, error)
                     return
                 }
                 
@@ -138,16 +161,15 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
                     var statusMessage: String
                     if nil != error || nil == message {
                         statusMessage = "Fail to read NDEF from tag"
+                        session.alertMessage = statusMessage
+                        session.invalidate()
                         self.completed(nil, error)
                     } else {
                         statusMessage = "Found 1 NDEF message"
-                        
-                            self.fireNdefEvent(message: message!)
-                        
+                        session.alertMessage = statusMessage
+                        session.invalidate()
+                        self.fireNdefEvent(message: message!)
                     }
-                    
-                    session.alertMessage = statusMessage
-                    session.invalidate()
                 })
             })
         })
