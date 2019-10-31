@@ -51,7 +51,7 @@ final class NFCController: NSObject {
 
     func initWriterSession(completed: @escaping ([AnyHashable: Any]?, Error?) -> (), request: NFCNDEFMessage) {
         if self.writerSession == nil {
-            let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
+            //let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
                 print("1 \(DispatchTime.now()) try writing")
                 
                 self.writerSession = NFCControllerWriter(completed: {
@@ -67,18 +67,18 @@ final class NFCController: NSObject {
                             else
                             {
                                 print(error)
-                                timer.invalidate()
+                                //timer.invalidate()
                                 completed(nil, error)
                             }
                         }
                     }
                     else
                     {
-                        timer.invalidate()
+                        //timer.invalidate()
                         completed(response, nil)
                     }
                 }, request: request)
-            }
+            //}
         }
     }
 }
@@ -195,7 +195,7 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
 // MARK: - NFCController Writer
 
 @available(iOS 13.0, *)
-final class NFCControllerWriter: UITableViewController, UINavigationControllerDelegate, NFCNDEFReaderSessionDelegate {
+final class NFCControllerWriter: UITableViewController, NFCNDEFReaderSessionDelegate {
     
     // MARK: - Properties
     var writerSession: NFCNDEFReaderSession?

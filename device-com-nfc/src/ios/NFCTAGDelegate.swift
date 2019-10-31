@@ -88,6 +88,7 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
                 session.alertMessage = error.localizedDescription
                 session.invalidate()
                 DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+                    [weak self] in
                     self!.completed(nil, "tagReaderSession:connect to tag" as? Error)
                 }
                 return

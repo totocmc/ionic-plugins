@@ -141,7 +141,7 @@ import CoreNFC
 //        DispatchQueue.main.asyncAfter(deadline: .now() + retryInterval, execute: {
 //            print("2 \(DispatchTime.now())")
             print("1 \(DispatchTime.now()) erase ok")
-            let timer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { (timer) in
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { (timer) in
                 print("2 \(DispatchTime.now()) erase ok")
                 self.sendSuccess(command: command, result: "Tag erased")
         }
@@ -165,8 +165,6 @@ import CoreNFC
         }
         
         let args = command.arguments[0] as! NSMutableArray
-        
-        //let ndefPayload: NFCNDEFPayload
         let ndefMessage = NFCNDEFMessage.init(records: [])
         ndefMessage.records.removeAll()
         
@@ -188,31 +186,31 @@ import CoreNFC
         }
         print(ndefMessage)
         
-        DispatchQueue.main.async {
-            print("sending ...")
+        DispatchQueue.main.async { [weak self] in
+            print("Begin writting session")
             
 //            let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { (timer) in
 //                print("1 \(DispatchTime.now()) try wrinting")
 //                timer.invalidate()
 //            }
             
-            if self.nfcController == nil {
-                self.nfcController = NFCController()
-                self.nfcController?.initWriterSession(completed: {
+            if self!.nfcController == nil {
+                self!.nfcController = NFCController()
+                self!.nfcController?.initWriterSession(completed: {
                     (response: [AnyHashable: Any]?, error: Error?) -> Void in
-                    DispatchQueue.main.async {
+                    //DispatchQueue.main.async {
                         print("Write NDEF")
                         if error != nil {
-                           print("Write KO")
-                           self.lastError = error
-                           self.sendError(command: command, result: error!.localizedDescription)
+                            print("Write KO")
+                            self!.lastError = error
+                            self!.sendError(command: command, result: error!.localizedDescription)
                         } else {
-                           print("Write OK")
-                            self.sendSuccess(command: command, jsonDictionary: response ?? [:])
+                            print("Write OK")
+                            self!.sendSuccess(command: command, jsonDictionary: response ?? [:])
                             //self.sendThroughChannel(jsonDictionary: response ?? [:])
                         }
-                        self.nfcController = nil
-                    }
+                        self!.nfcController = nil
+                    //}
                 }, request: ndefMessage)
             }
         }
@@ -221,27 +219,27 @@ import CoreNFC
     @objc(readTag:)
     func readTag(command: CDVInvokedUrlCommand) {
     
-        DispatchQueue.main.async {
-             print("Begin reading session")
+        DispatchQueue.main.async { [weak self] in
+            print("Begin reading session")
 
-             if self.nfcController == nil {
-                self.nfcController = NFCController()
-                self.nfcController!.initReaderSession(completed: {
-                     (response: [AnyHashable: Any]?, error: Error?) -> Void in
-                     //DispatchQueue.main.async {
-                         print("Read NDEF")
-                         if error != nil {
-                            print("Read KO")
-                            self.lastError = error
-                            self.sendError(command: command, result: error!.localizedDescription)
-                         } else {
-                            print("Read OK")
-                             self.sendSuccess(command: command, jsonDictionary: response ?? [:])
-                             //self.sendThroughChannel(jsonDictionary: response ?? [:])
-                         }
-                         self.nfcController = nil
+            if self!.nfcController == nil {
+                self!.nfcController = NFCController()
+                self!.nfcController!.initReaderSession(completed: {
+                    (response: [AnyHashable: Any]?, error: Error?) -> Void in
+                    //DispatchQueue.main.async { [weak self] in
+                        print("Read NDEF")
+                        if error != nil {
+                        print("Read KO")
+                        self!.lastError = error
+                        self!.sendError(command: command, result: error!.localizedDescription)
+                        } else {
+                        print("Read OK")
+                        self!.sendSuccess(command: command, jsonDictionary: response ?? [:])
+                         //self.sendThroughChannel(jsonDictionary: response ?? [:])
+                        }
+                        self!.nfcController = nil
                     //}
-                 })
+                })
             }
         }
     }
@@ -258,24 +256,25 @@ import CoreNFC
         }
         
         DispatchQueue.main.async {
+            [weak self] in
             print("Begin TAG reading session")
 
-            if self.tagController == nil {
-                self.tagController = NFCTAGDelegate(completed: {
+            if self!.tagController == nil {
+                self!.tagController = NFCTAGDelegate(completed: {
                     (response: [AnyHashable: Any]?, error: Error?) -> Void in
                     print("handle TAG")
-                    self.sendSuccess(command: command, result: "TAG Listener is on")
+                    self!.sendSuccess(command: command, result: "TAG Listener is on")
                     //DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(5000)) {
                         if error != nil {
-                            self.lastError = error
-                            self.sendError(command: command, result: error!.localizedDescription)
+                            self!.lastError = error
+                            self!.sendError(command: command, result: error!.localizedDescription)
                         }
                         else
                         {
 //                            self.sendSuccess(command: command, result: "TAG Listener is on")
-                            self.sendThroughChannel(jsonDictionary: response ?? [:])
+                            self!.sendThroughChannel(jsonDictionary: response ?? [:])
                         }
-                        self.tagController = nil
+                    self?.tagController = nil
                     //}
                 }, message: message)
             }
