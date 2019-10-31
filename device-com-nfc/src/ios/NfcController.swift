@@ -107,7 +107,7 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
             return
         }
 
-        readerSession = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: false)
+        readerSession = NFCNDEFReaderSession(delegate: self, queue: nil, invalidateAfterFirstRead: true)
         readerSession?.alertMessage = "Hold your iPhone near the item to learn more about it."
         readerSession?.begin()
     }
@@ -182,7 +182,6 @@ final class NFCControllerReader: UITableViewController, NFCNDEFReaderSessionDele
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         // To read new tags, a new session instance is required.
         session.invalidate()
-        readerSession = nil
         self.completed(nil, error)
     }
     
@@ -289,7 +288,6 @@ final class NFCControllerWriter: UITableViewController, UINavigationControllerDe
     func readerSession(_ session: NFCNDEFReaderSession, didInvalidateWithError error: Error) {
         // To read new tags, a new session instance is required.
         session.invalidate()
-        writerSession = nil
         self.completed(nil, error)
     }
 

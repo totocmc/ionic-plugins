@@ -228,7 +228,7 @@ import CoreNFC
                 self.nfcController = NFCController()
                 self.nfcController!.initReaderSession(completed: {
                      (response: [AnyHashable: Any]?, error: Error?) -> Void in
-                     DispatchQueue.main.async {
+                     //DispatchQueue.main.async {
                          print("Read NDEF")
                          if error != nil {
                             print("Read KO")
@@ -240,7 +240,7 @@ import CoreNFC
                              //self.sendThroughChannel(jsonDictionary: response ?? [:])
                          }
                          self.nfcController = nil
-                     }
+                    //}
                  })
             }
         }
@@ -252,27 +252,31 @@ import CoreNFC
         isListeningTAG = true // Flag for the AppDelegate
         //sendSuccess(command: command, result: "TAG Listener is on")
         
+        var message: String?
+        if command.arguments.count != 0 {
+            message = command.arguments[0] as? String ?? ""
+        }
+        
         DispatchQueue.main.async {
             print("Begin TAG reading session")
 
             if self.tagController == nil {
-                var message: String?
-                if command.arguments.count != 0 {
-                    message = command.arguments[0] as? String ?? ""
-                }
                 self.tagController = NFCTAGDelegate(completed: {
                     (response: [AnyHashable: Any]?, error: Error?) -> Void in
-                    DispatchQueue.main.async {
-                        print("handle TAG")
+                    print("handle TAG")
+                    self.sendSuccess(command: command, result: "TAG Listener is on")
+                    //DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(5000)) {
                         if error != nil {
                             self.lastError = error
                             self.sendError(command: command, result: error!.localizedDescription)
-                        } else {
-                            // self.sendSuccess(command: command, result: response ?? "")
+                        }
+                        else
+                        {
+//                            self.sendSuccess(command: command, result: "TAG Listener is on")
                             self.sendThroughChannel(jsonDictionary: response ?? [:])
                         }
                         self.tagController = nil
-                    }
+                    //}
                 }, message: message)
             }
         }
@@ -294,7 +298,7 @@ import CoreNFC
                 }
                 self.ndefController = NFCNDEFDelegate(completed: {
                     (response: [AnyHashable: Any]?, error: Error?) -> Void in
-                    DispatchQueue.main.async {
+                    //DispatchQueue.main.async {
                         print("handle NDEF")
                         if error != nil {
                             self.lastError = error
@@ -304,7 +308,7 @@ import CoreNFC
                             self.sendThroughChannel(jsonDictionary: response ?? [:])
                         }
                         self.ndefController = nil
-                    }
+                    //}
                 }, message: message)
             }
         }

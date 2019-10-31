@@ -41,9 +41,9 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     func tagReaderSession(_ session: NFCTagReaderSession, didInvalidateWithError error: Error){
         print(error.localizedDescription)
         session.invalidate()
-        self.session = nil
-        self.completed(nil, error)
-        
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+            self.completed(nil, error)
+        }
     }
 
     func tagReaderSession(_ session: NFCTagReaderSession, didDetect tags: [NFCTag]) {
@@ -87,14 +87,16 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
                 let error = NFCReaderError(NFCReaderError.readerTransceiveErrorTagNotConnected)
                 session.alertMessage = error.localizedDescription
                 session.invalidate()
-                self!.completed(nil, "tagReaderSession:connect to tag" as? Error)
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(500)) {
+                    self!.completed(nil, "tagReaderSession:connect to tag" as? Error)
+                }
                 return
             }
             else
             {
                 print( "connected to tag" )
-                self!.fireTagEvent(tag: tag!)
                 session.invalidate()
+                self!.fireTagEvent(tag: tag!)
             }
             
         }
@@ -103,9 +105,13 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
     func fireTagEvent(tag: NFCTag) {
         let returnedJSON = NSMutableDictionary()
         
+        let array = NSMutableArray()
+        array.add([])
+        
         if case let .iso15693(iso15Tag) = tag {
             let dict = NSMutableDictionary()
             dict.setValue([UInt8](iso15Tag.identifier.reversed()), forKey: ("id" as NSString) as String)
+            dict.setObject(array, forKey: "ndefMessage" as NSString)
             
             returnedJSON.setValue("tag", forKey: "type")
             returnedJSON.setObject(dict, forKey: "tag" as NSString)
@@ -113,6 +119,9 @@ class NFCTAGDelegate: NSObject, NFCTagReaderSessionDelegate
         print(returnedJSON)
         
         let response = returnedJSON as! [AnyHashable : Any]
-        completed(response, nil)
+        print(response)
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(5000)) {
+            self.completed(response, nil)
+        }
     }
 }
